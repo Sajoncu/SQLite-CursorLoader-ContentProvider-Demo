@@ -232,7 +232,22 @@ class PetProvider : ContentProvider() {
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
-        return 0
+        val match = sUriMatcher.match(uri)
+        val db = mDbHelper.writableDatabase
+        val rowsDeleted: Int
+
+        when(match) {
+            PETS-> {
+                rowsDeleted = db.delete(PetContract.PetEntry.TABLE_NAME, selection, selectionArgs)
+            }
+            PET_ID -> {
+                val newSelection = PetContract.PetEntry._ID + "=?";
+                val newSelectionArgs = arrayOf(ContentUris.parseId(uri).toString())
+                rowsDeleted = db.delete(PetContract.PetEntry.TABLE_NAME, newSelection, newSelectionArgs)
+            }
+            else -> {throw IllegalArgumentException("Deletion did not completed")}
+        }
+        return rowsDeleted
     }
 
     override fun getType(uri: Uri): String? {

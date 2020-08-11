@@ -2,6 +2,7 @@ package com.example.petsappcontentproviderexample
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import android.content.DialogInterface
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
@@ -12,6 +13,7 @@ import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
@@ -262,6 +264,7 @@ class EditorActivity : AppCompatActivity() {
 
             R.id.action_delete -> {
                 Log.d("CONTENT_PROVIDER", "Delete Menu item clicked")
+                showDeleteConfirmationDialog()
                 return true
                 //Toast.makeText(this, "Delete Menu item clicked", Toast.LENGTH_SHORT).show()
             }
@@ -271,6 +274,48 @@ class EditorActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    /**
+     * Prompt the user to confirm that they want to delete this pet.
+     */
+    private fun showDeleteConfirmationDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(R.string.delete_dialog_msg)
+        builder.setPositiveButton(R.string.delete) { dialog, which -> run {
+            deletePet()
+        }}
+        builder.setNegativeButton(R.string.cancel) {dialog, id ->
+            run {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                // and continue editing the pet.
+                dialog?.dismiss()
+            }
+        }
+
+        val alertDialog = builder.create()
+        alertDialog.show()
+    }
+
+    private fun deletePet() {
+        if(mCurrentPetUri != null) {
+            // Call the ContentResolver to delete the pet at the given content URI.
+            // Pass in null for the selection and selection args because the mCurrentPetUri
+            // content URI already identifies the pet that we want.
+            val rowsDeleted = contentResolver.delete(mCurrentPetUri!!, null, null)
+
+            // Show a toast message depending on whether or not the delete was successful.
+            if (rowsDeleted == 0) {
+                // If no rows were deleted, then there was an error with the delete.
+                Toast.makeText(this, getString(R.string.editor_delete_pet_failed),
+                    Toast.LENGTH_SHORT).show();
+            } else {
+                // Otherwise, the delete was successful and we can display a toast.
+                Toast.makeText(this, getString(R.string.editor_delete_pet_successful),
+                    Toast.LENGTH_SHORT).show();
+            }
+        }
+        finish()
     }
 
     /**
