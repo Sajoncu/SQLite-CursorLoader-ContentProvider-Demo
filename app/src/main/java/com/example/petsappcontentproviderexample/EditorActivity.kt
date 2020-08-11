@@ -90,6 +90,7 @@ class EditorActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
             R.id.action_save -> {
                 try{
                     savePet()
+                    finish()
                 } catch(ex: Exception) {
                     Log.d("CONTENT_PROVIDER", "Exception $ex")
                     //Toast.makeText(this, "Exception $ex", Toast.LENGTH_SHORT).show()

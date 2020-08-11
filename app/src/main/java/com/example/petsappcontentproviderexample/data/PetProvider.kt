@@ -7,7 +7,6 @@ import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
 import android.util.Log
-import java.lang.IllegalArgumentException
 
 
 class PetProvider : ContentProvider() {
@@ -76,7 +75,31 @@ class PetProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
         sortOrder: String?
     ): Cursor? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val database = mDbHelper.readableDatabase
+        val cursor: Cursor
+        val match = sUriMatcher.match(uri)
+        cursor = when(match) {
+            PETS -> {
+                database.query(
+                    PetContract.PetEntry.TABLE_NAME, projection, selection, selectionArgs,
+                    null, null, sortOrder)
+            }
+            PET_ID -> {
+                val new_selection = PetContract.PetEntry._ID + "=?"
+                val newSelectionAars = arrayOf((ContentUris.parseId(uri)).toString())
+                database.query(PetContract.PetEntry.TABLE_NAME, projection, new_selection, newSelectionAars,
+                    null, null, sortOrder);
+            }
+            else -> {
+                throw IllegalArgumentException("Cannot query unknown URI " + uri)
+            }
+        }
+
+        // Set notification URI on the Cursor,
+        // so we know what content URI the Cursor was created for.
+        // If the data at this URI changes, then we know we need to update the Cursor.
+        cursor.setNotificationUri(context!!.contentResolver, uri);
+        return cursor
     }
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
@@ -124,6 +147,8 @@ class PetProvider : ContentProvider() {
             return null
         }
 
+        // Notify all listeners that the data has changed for the pet content URI
+        context!!.contentResolver.notifyChange(uri, null);
         // Return the new URI with the ID (of the newly inserted row) appended at the end
         return ContentUris.withAppendedId(uri, id)
     }
@@ -134,15 +159,26 @@ class PetProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return 0
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return 0
     }
 
     override fun getType(uri: Uri): String? {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val match = sUriMatcher.match(uri)
+        when(match) {
+            PETS -> {
+                return PetContract.PetEntry.CONTENT_LIST_TYPE
+            }
+            PET_ID -> {
+                return PetContract.PetEntry.CONTENT_ITEM_TYPE
+            }
+            else -> {
+                throw IllegalStateException("Unknown URI " + uri + " with match " + match)
+            }
+        }
     }
 
     companion object {
