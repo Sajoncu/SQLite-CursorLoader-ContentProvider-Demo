@@ -11,6 +11,8 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ListView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
@@ -107,7 +109,37 @@ class CatalogActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            R.id.action_delete_all_entries ->{
+                showDeleteConfirmationDialog()
+                return true
+            }
+        }
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun showDeleteConfirmationDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.apply {
+            setMessage(R.string.delete_all_message_dialog)
+            setPositiveButton(R.string.delete) {dialog, witch ->
+                run {
+                    deleteAllPets()
+                }
+            }
+            setNegativeButton(R.string.cancel) {dialog, id ->
+                run {
+                    dialog?.dismiss()
+                }
+            }
+        }.create().show()
+//        val alertDialog = builder.create()
+    }
+
+    private fun deleteAllPets() {
+        val rowsDeleted = contentResolver.delete(PetEntry.CONTENT_URI, null, null);
+        Log.v("CatalogActivity", rowsDeleted.toString() + " rows deleted from pet database")
+        Toast.makeText(this, "All pets deleted successfully", Toast.LENGTH_SHORT).show()
     }
 
     override fun onResume() {

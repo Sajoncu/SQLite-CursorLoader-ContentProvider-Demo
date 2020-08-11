@@ -225,7 +225,7 @@ class PetProvider : ContentProvider() {
         // If 1 or more rows were updated, then notify all listeners that the data at the
         // given URI has changed
         if (rowsUpdated != 0) {
-            context!!.contentResolver.notifyChange(uri, null);
+            context!!.contentResolver.notifyChange(uri, null)
         }
 
         return rowsUpdated
@@ -247,6 +247,7 @@ class PetProvider : ContentProvider() {
             }
             else -> {throw IllegalArgumentException("Deletion did not completed")}
         }
+        context!!.contentResolver.notifyChange(uri, null)
         return rowsDeleted
     }
 

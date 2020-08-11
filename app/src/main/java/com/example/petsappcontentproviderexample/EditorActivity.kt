@@ -234,6 +234,36 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        if(!mPetHasChanged) {
+            super.onBackPressed()
+            return
+        }
+
+        // Notify the user that he changed pet
+        // and make sure he want to save the changed or not
+        val discardButtonClickableSpan =
+            DialogInterface.OnClickListener{ dialogInterface: DialogInterface, i: Int -> finish()}
+        // this will show a dialog to make sure that there are unsaved change
+        showUnsaveChangedDialog(discardButtonClickableSpan)
+
+    }
+
+    private fun showUnsaveChangedDialog(discardButtonClickableSpan: DialogInterface.OnClickListener) {
+        val dialog = AlertDialog.Builder(this)
+
+        dialog.apply{
+            setMessage(R.string.unsaved_changes_dialog_msg)
+            setPositiveButton(R.string.discard, discardButtonClickableSpan)
+            setNegativeButton(R.string.cancel) {dialog, id ->
+                run {
+                    dialog?.dismiss()
+                }
+            }
+        }.create().show()
+
+    }
+
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         super.onPrepareOptionsMenu(menu)
         if(mCurrentPetUri == null) {
