@@ -159,7 +159,76 @@ class PetProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int {
-        return 0
+        val match = sUriMatcher.match(uri)
+        Log.d("CONTENT_PROVIDER", "Matched URI $match")
+        return when(match) {
+            PETS -> {
+                Log.d("CONTENT_PROVIDER", "Inside update->PETS")
+                updatePet(uri, values, selection, selectionArgs)
+            }
+            PET_ID -> {
+                val new_selection = PetContract.PetEntry._ID + "=?"
+                val newSelectionAars = arrayOf((ContentUris.parseId(uri)).toString())
+                Log.d("CONTENT_PROVIDER", "Inside update->PET_ID and selectionArgs: $newSelectionAars")
+                updatePet(uri, values, new_selection, newSelectionAars)
+            }
+            else -> {
+                throw IllegalArgumentException("Insertion is not supported for $uri")
+            }
+        }
+    }
+
+    private fun updatePet(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?): Int {
+        // If the {@link PetEntry#COLUMN_PET_NAME} key is present,
+        // check that the name value is not null.
+        if (values!!.containsKey(PetContract.PetEntry.COLUMN_PET_NAME)) {
+//            val name = values.getAsString(PetContract.PetEntry.COLUMN_PET_NAME)
+//            if(name == null) {
+//                throw IllegalArgumentException("Pet requires a name")
+//            }
+
+            val name = values.getAsString(PetContract.PetEntry.COLUMN_PET_NAME)
+                ?: throw IllegalArgumentException("Pet requires a name");
+        }
+
+        // If the {@link PetEntry#COLUMN_PET_GENDER} key is present,
+        // check that the gender value is valid.
+        if (values.containsKey(PetContract.PetEntry.COLUMN_PET_GENDER)) {
+            val gender = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_GENDER);
+            if (gender == null || !PetContract.PetEntry.isValidGender(gender)) {
+                throw IllegalArgumentException("Pet requires valid gender");
+            }
+        }
+
+        // If the {@link PetEntry#COLUMN_PET_WEIGHT} key is present,
+        // check that the weight value is valid.
+        if (values.containsKey(PetContract.PetEntry.COLUMN_PET_WEIGHT)) {
+            // Check that the weight is greater than or equal to 0 kg
+            val weight = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_WEIGHT);
+            if (weight != null && weight < 0) {
+                throw IllegalArgumentException("Pet requires valid weight");
+            }
+        }
+
+        // No need to check the breed, any value is valid (including null).
+
+        // If there are no values to update, then don't try to update the database
+        if (values.size() == 0) {
+            return 0;
+        }
+
+        // Otherwise, get writeable database to update the data
+        val database = mDbHelper.writableDatabase
+        // Perform the update on the database and get the number of rows affected
+         val rowsUpdated = database.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs)
+
+        // If 1 or more rows were updated, then notify all listeners that the data at the
+        // given URI has changed
+        if (rowsUpdated != 0) {
+            context!!.contentResolver.notifyChange(uri, null);
+        }
+
+        return rowsUpdated
     }
 
     override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int {

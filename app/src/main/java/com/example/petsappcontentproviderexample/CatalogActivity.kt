@@ -1,19 +1,20 @@
 package com.example.petsappcontentproviderexample
 
+import android.content.ContentUris
 import android.content.Intent
 import android.database.Cursor
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.AdapterView.OnItemClickListener
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.FragmentActivity
 import androidx.loader.app.LoaderManager
 import androidx.loader.content.CursorLoader
 import androidx.loader.content.Loader
-
 import com.example.petsappcontentproviderexample.adapter.PetCursorAdapter
 import com.example.petsappcontentproviderexample.data.PetContract
 import com.example.petsappcontentproviderexample.data.PetContract.PetEntry
@@ -45,7 +46,18 @@ class CatalogActivity : AppCompatActivity() {
         // Initialize PetCursorAdapter
         initializeAdapter()
 
-        // Kick off the loader
+        // Set click listener in a list item
+        mPetsListView.setOnItemClickListener{ adapterView, view, position, id ->
+
+            val intent = Intent(this@CatalogActivity, EditorActivity::class.java)
+
+            val currentPetUri: Uri = ContentUris.withAppendedId(PetEntry.CONTENT_URI, id)
+            intent.data = currentPetUri
+
+            // Launch the {@link EditorActivity} to display the data for the current pet.
+            startActivity(intent)
+        }
+
         //supportLoaderManager.initLoader(PET_LOADER, null, this)
         supportLoaderManager.initLoader(PET_LOADER, null, callback)
         //LoaderManager.getInstance(this).initLoader(PET_LOADER, null, this)
